@@ -1,0 +1,94 @@
+---
+title: "Homework 3"
+author: "Andrew Gruber - arg2223"
+date: "10/24/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Question 1 
+```{r}
+setwd("~/Desktop/Data")
+nets<-readLines("NetsSchedule1920.html")
+```
+
+Question 2
+```{r}
+#Part A
+length(nets)
+#Part B
+sum(nchar(nets))
+#Part C 
+max(nchar(nets))
+```
+There are 74 lines in the file. There are a total of 427056 characters and the maximum number of characters in any one line is 271111 characters. 
+
+Question 3
+```{r}
+date_expression <- "[A-Z][a-z][a-z], [A-Z][a-z][a-z] [0-9]{1,2}"
+grep(pattern=date_expression,nets)
+nets_new<-strsplit(nets[69],split="ickets")[[1]]
+nets1920<-nets_new[grep(nets_new,pattern=date_expression)]
+```
+
+Question 4
+```{r}
+date_list<-regmatches(nets1920, gregexpr(date_expression,nets1920))
+date<-c()
+for (i in 1:length(date_list)) {
+  date[i]<-regmatches(nets1920, gregexpr(date_expression,nets1920))[[i]][1]
+}
+head(date,6)
+```
+
+Question 5 
+```{r}
+time_expression <-"[0-9]{1,2}:[0-9]{1,2} PM"
+time_list<-regmatches(nets1920,gregexpr(time_expression,nets1920))
+time<-c()
+for (i in 1:length(time_list)) {
+  time[i]<-regmatches(nets1920, gregexpr(time_expression,nets1920))[[i]][1]
+}
+head(time,6)
+```
+
+Question 6
+```{r}
+location_expression<-"@?(vs)?</span><span class="
+location_list<-regmatches(nets1920,gregexpr(location_expression,nets1920))
+location<-c()
+for (i in 1:length(location_list)) {
+  location[i]<-regmatches(nets1920, gregexpr(location_expression,nets1920))[[i]][1]
+}
+
+home<-c()
+
+for (i in 1:length(location)) {
+  if(substr(location[i], start=1, stop=1)=='v'){
+    home[i]=1
+  }
+  else{home[i]=0}
+}
+
+head(home,6)
+```
+
+Question 7
+```{r}
+opponent_expression<-"[A-Z]+[a-z]{0,} ?[A-Z]?[a-z]{0,}<!--"
+opponent_list<-regmatches(nets1920,gregexpr(opponent_expression,nets1920))
+opponent<-c()
+for (i in 1:length(opponent_list)) {
+  opponent[i]<-strsplit(opponent_list[[i]][1], split="<")[[1]][1]
+}
+head(opponent,6)
+```
+
+Question 8
+```{r}
+nets_schedule=data.frame(date,time,home,opponent)
+head(nets_schedule)
+tail(net
