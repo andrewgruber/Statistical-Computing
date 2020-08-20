@@ -1,0 +1,112 @@
+---
+title: "Homework 4"
+author: "Andrew Gruber - arg2223"
+date: "11/5/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Question 1 
+```{r}
+debt <- read.csv("debt.csv", as.is = TRUE)
+mean.growth<-function(dataframe){
+  return(mean(dataframe$growth))
+}
+library(plyr)
+#Average GDP Growth by Country
+signif(daply(debt, .(Country), mean.growth),3)
+```
+
+Question 2
+```{r}
+signif(daply(debt, .(Year), mean.growth),3)
+plot(rep(1946:2009),signif(daply(debt, .(Year), mean.growth),3), xlab='Year', ylab='GDP Growth', main='GDP Growth by Year, 1946-2009')
+```
+
+Question 3
+```{r}
+#Part A 
+signif(cor(debt$growth,debt$ratio),4)
+#Part B 
+growth.ratio.correlation<-function(dataframe){
+  return(cor(dataframe$growth,dataframe$ratio))
+}
+signif(daply(debt, .(Country), growth.ratio.correlation),4)
+signif(mean(signif(daply(debt, .(Country), growth.ratio.correlation),4)),4)
+hist(daply(debt, .(Country), growth.ratio.correlation),breaks = 10, main='Correlation between GDP Growth and Debt Ratio, by Country',xlab='Correlation Coefficient')
+#Part C
+signif(daply(debt, .(Year), growth.ratio.correlation),4)
+signif(mean(signif(daply(debt, .(Year), growth.ratio.correlation),4)),5)
+hist(daply(debt, .(Year), growth.ratio.correlation),breaks = 10, main='Correlation between GDP Growth and Debt Ratio, by Year',xlab='Correlation Coefficient')
+#Part D
+```
+As far as countries, the correlation between debt ratio and GDP growth tends to be negative. Australia, Canada, Finland, New Zealand, Norway, and Spain defy this. In line with this, the correlation coefficient is negative in most years with the exception of: 1950, 1963, 1971, 1973, 1974, 1975, 1977, 1978, 1981, 1982, 1989, 1990, 1991, and 1995.
+
+Question 4
+```{r}
+lm(debt$growth~debt$ratio)
+plot(debt$ratio,debt$growth, xlab='Debt Ratio',ylab='GDP Growth', main='Debt Ratio and GDP Growth')
+abline(a=4.27929, b=-0.01836, col='red')
+```
+
+The slope is -0.018 and the intercept is 4.279. 
+
+Question 5
+```{r}
+par(mfrow=c(2,2)) 
+france<-debt[debt$Country=='France',]
+germany<-debt[debt$Country=='Germany',]
+italy<-debt[debt$Country=='Italy',]
+japan<-debt[debt$Country=='Japan',]
+plot(france$ratio,france$growth,xlab='Debt Ratio',ylab='GDP Growth', main='France')
+plot(germany$ratio,germany$growth,xlab='Debt Ratio',ylab='GDP Growth', main='Germany')
+plot(italy$ratio,italy$growth,xlab='Debt Ratio',ylab='GDP Growth',main='Italy')
+plot(japan$ratio,japan$growth,xlab='Debt Ratio',ylab='GDP Growth',main='Japan')
+par(mfrow=c(1,1))
+```
+
+Question 6
+```{r}
+#Part A
+dim(france)
+#Part B
+next.growth <- function(year, country.df) {
+  if(any(country.df$Year == (year + 1))) {
+    return(country.df$growth[country.df$Year == (year + 1)])} 
+  else {return(NA)}
+}
+france$next.growth<-signif(sapply(france$Year, next.growth, france),4)
+france$next.growth[france$Year=='1971']
+france$next.growth[france$Year=='1972']
+```
+
+Question 7
+```{r}
+next.growth.debt <- function(df) {
+  df$next.growth <- sapply(df$Year, next.growth, df)
+  return(df)
+}
+debt<-ddply(debt, .(Country), next.growth.debt)
+debt$next.growth[debt$Country=='France'& debt$Year=='2009']
+```
+
+Question 8
+```{r}
+plot(debt$ratio,debt$next.growth, xlab='Debt Ratio', ylab='Next GDP Growth', main='Debt Ratio and Next Year Growth')
+abline(lm(debt$next.growth~debt$ratio), col='red')
+signif(lm(debt$next.growth~debt$ratio)$coefficients,3)
+```
+
+The intercept of this graph is less than that of the Current Year graph and the slope is slightly closer to zero. 
+
+Question 9
+```{r}
+plot(debt$growth,debt$next.growth, xlab='Current Growth', ylab='Next Year Growth', main='Current and Next Year GDP Growth')
+abline(lm(debt$next.growth~debt$growth), col='red')
+signif(lm(debt$next.growth~debt$growth)$coefficients,3)
+```
+
+Current Year GDP growth seems to be a better predictor of next year's growth than debt to GDP ratio. The slope of the regression line of debt ratio on next year GDP growth was close to zero while the regression line of current growth has a positive relationship. 
