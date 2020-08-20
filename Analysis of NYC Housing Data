@@ -1,0 +1,163 @@
+---
+title: "STAT GU4206- Homework 1"
+author: "Andrew Gruber - arg2223"
+date: "9/13/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Section I
+
+Part I 
+```{r}
+housing<-read.csv("NYChousing.csv",as.is=TRUE, header=TRUE)
+```
+
+Part II 
+```{r}
+#Number of Columns 
+length(housing)
+#Number of Rows 
+length(housing[,1])
+```
+
+Part III 
+```{r}
+colnames(housing)
+```
+
+Part IV 
+```{r}
+apply(is.na(housing), 2, sum)
+```
+This command tells you the total number of 'NA' values in each column. For example, there are 15 missing entries for the latitudes of properties. 
+
+Part V 
+```{r}
+housing<-housing[!is.na(housing$Value),]
+```
+
+Part VI 
+```{r}
+length(housing[,1])
+```
+52 Rows were removed. This result does agree with Part IV since it counted 52 entries for which the value was NA. 
+
+Part VII 
+```{r}
+quantile(housing$Value,0.75)
+```
+
+Part VIII
+```{r}
+housing$highValue<-ifelse(housing$Value>quantile(housing$Value,0.75),"High","NotHigh")
+```
+
+Part IX
+```{r}
+contingency_table<-prop.table(table(housing$Borough,housing$highValue))
+print(contingency_table)
+```
+
+Part X 
+```{r}
+contingency_table[1,1]
+```
+5.58% of properties are in the upper quartile and in the Bronx 
+
+Part XI 
+```{r}
+contingency_table[1,1]/(contingency_table[1,1]+contingency_table[1,2])
+```
+Using Bayes' Theorem, the probability of a property being in the upper quartile given that it is in the Bronx is 0.206
+
+Part XII 
+```{r}
+housing$logValue<-log(housing$Value)
+summary(housing$logValue)
+```
+
+Part XIII
+```{r}
+housing$logUnits<-log(housing$UnitCount)
+summary(housing$logUnits)
+```
+
+Part XIV
+```{r}
+housing$after1950<-ifelse(housing$YearBuilt>=1950,TRUE,FALSE)
+```
+
+Section II 
+Part I 
+```{r}
+boxplot(housing$logValue~housing$Borough, xlab='Borough', ylab='Log of Property Value', main='Log of Property Value by Borough')
+```
+
+Part II 
+```{r}
+plot(housing$logValue,housing$logUnits, xlab='Log of Property Units', ylab='Log of Property Value', main='Property Value and Property Units')
+```
+
+Part III 
+```{r}
+plot(housing$logValue,housing$logUnits, xlab='Log of Property Units', ylab='Log of Property Value', main='Property Value and Property Units', col = factor(housing$after1950))
+
+legend("bottomright", legend = levels(factor(housing$after1950)), fill
+= unique(factor(housing$after1950)))
+```
+This plot tells us a few things. First, property value and number of units in that property generally have a positive, direct relationship- i.e. properties that have more units also tend to be more valuable. We can also see somewhat of a split between properties built before and after 1950. The red dots (post-1950) tend to both have more units and be more valuable. The black dots (pre-1950) tend to have fewer units and a correspondingly lower property value. 
+
+Part IV 
+```{r}
+#Correlation between logValue and logUnits for properties: 
+#In the Whole Data Set:
+cor(housing$logValue,housing$logUnits)
+#In Manhattan:
+manhattan<-housing[housing$Borough=='Manhattan',]
+cor(manhattan$logValue,manhattan$logUnits)
+#In Brooklyn:
+brooklyn<-housing[housing$Borough=='Brooklyn',]
+cor(brooklyn$logValue,brooklyn$logUnits)
+#Built Before 1950:
+pre_1950<-housing[housing$after1950==FALSE,]
+cor(pre_1950$logValue,pre_1950$logUnits)
+#Built After 1950: 
+post_1950<-housing[housing$after1950==TRUE,]
+cor(post_1950$logValue,post_1950$logUnits)
+```
+
+Part V 
+```{r}
+mb<-housing[housing$Borough=='Manhattan' | housing$Borough=='Brooklyn',]
+plot(mb$logValue,mb$logUnits, xlab='Log of Property Units', ylab='Log of Property Value', main='Property Value and Property Units in Manhattan and Brooklyn', col = factor(mb$Borough))
+
+legend("bottomright", legend = levels(factor(mb$Borough)), fill
+= unique(factor(mb$Borough)))
+
+```
+
+Part VI
+```{r}
+median(housing[housing$Borough=='Manhattan',]$Value)
+```
+This accomplishes the same task of getting the median property value for units in Manhattan- $1,172,362
+
+Part VII
+```{r}
+#Median of the Whole Data Set
+median(housing$Value)
+#Median for Properties in the Bronx
+median(housing[housing$Borough=='Bronx',]$Value)
+#Median for Properties in Brooklyn
+median(housing[housing$Borough=='Brooklyn',]$Value)
+#Median for Properties in Manhattan
+median(housing[housing$Borough=='Manhattan',]$Value)
+#Median for Properties in Queens
+median(housing[housing$Borough=='Queens',]$Value)
+#Median for Properties on Staten Island
+median(housing[housing$Borough=='Staten Island',]$Value)
+```
