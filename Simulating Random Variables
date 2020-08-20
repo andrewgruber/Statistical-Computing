@@ -1,0 +1,266 @@
+---
+title: "Homework 5"
+author: "Andrew Gruber - arg2223"
+date: "11/19/2019"
+output: html_document
+---
+
+Part 1 
+
+Problem 1
+
+Question 1
+```{r}
+
+# Cauchy PDF: f(x)=(1/pi)(1/(1+x^2))
+# Cauchy CDF: F(x)=(1/pi)arctan(x)+0.5
+# Inverse Cauchy CDF: tan(pi(x-0.5))
+```
+
+Question Two
+```{r}
+set.seed(0)
+cauchy.sim <- function(n) {
+  u<-runif(n)
+  return(ifelse((u < 0 | u > 1), 0, tan(pi*(u-1/2))))
+}
+
+cauchy.sim(10)
+```
+
+Question Three
+```{r}
+x<-seq(-10,10,by=0.01)
+set.seed(0)
+cauchy_draws<-cauchy.sim(1000)
+hist(cauchy_draws, probability = T, xlim=c(-10,10), breaks=1000, ylim=c(0,0.31), main = 'Histogram of Draws from the Cauchy Distribution', xlab='x')
+lines(x, (1/pi)*(1/(1+x^2)), lty=2)
+legend('topright',legend=c('Actual Function'),lty=2)
+```
+
+Part 2
+
+Problem 2
+
+Questions Four and Five
+```{r}
+#Question Four
+f <- function(x) {
+  return(ifelse((x < -1 | x > 2), 0, (1/9)*(4-x^2)))
+}
+x<-seq(-3,3, by=0.01)
+plot(x,f(x),type='l', main='PDF for Temperature of a Chemical Reaction')
+
+#Question Five
+x.max<-0 #by inspection
+f.max<-(1/9)*(4-x.max^2)
+e <- function(x) {
+  return(ifelse((x < -1 | x > 2), Inf, f.max))
+}
+lines(x, e(x), lty = 2)
+```
+
+Question Six
+```{r}
+set.seed(0)
+n.draws<-10000
+n<-0
+f.draws   <- numeric(n.draws)
+while(n<n.draws){
+  y<-runif(1,min=-1,max=2)
+  u<-runif(1)
+  if(u<f(y)/e(y)){
+    n        <- n + 1
+    f.draws[n] <- y
+  }
+}
+```
+
+Question Seven
+```{r}
+x<-seq(-3,3, by=0.01)
+hist(f.draws, prob = T, ylab = "f(x)", xlab = "x", 
+     main = "Histogram of Draws from Temperature PDF")
+lines(x, f(x), lty = 2)
+legend('topright',legend=c('Actual Function'),lty=2)
+```
+
+Problem 3
+
+Question Eight
+```{r}
+f<-function(x){
+  return((1/sqrt(2*pi))*exp(-0.5*x*x))
+}
+x<-seq(-5,5, by=0.01)
+plot(x,f(x),type='l', main='PDF for a Normal(1,0)')
+```
+
+Question Nine
+```{r}
+e<-function(x,alpha){
+  envelope<-((1/alpha)*(1/pi)*(1/(1+x^2)))
+  return(envelope)
+}
+```
+
+Question Ten
+```{r}
+x<-seq(-10,10, by=0.01)
+plot(x,f(x), type='l', lty=1)
+lines(x, e(x,alpha=0.62), type='l', lty=2)
+legend('topright', legend=c('Function','Envelope'),lty=1:2)
+```
+
+Ideally, we want the envelope to be as close to the function as possible without being less. By inspection, I felt that a value of 0.62 was as close as I could get without going under the function.
+
+
+Question Eleven
+```{r}
+normal.sim<-function(draws){
+  n<-0
+  f.draws=numeric(draws)
+  while(n<draws){
+  y<-cauchy.sim(1)
+  u<-runif(1)
+  if(u<f(y)/e(y,0.62)){
+    n<-n+1
+    f.draws[n]<-y
+  }
+  }
+  return(f.draws)
+}
+set.seed(0)
+normal.sim(10)
+```
+
+Question Twelve
+```{r}
+set.seed(0)
+normal.draws<-normal.sim(10000)
+hist(normal.draws, prob = T, ylab = "f(x)", xlab = "x", ylim=c(0,0.5),
+     main = "Histogram of 10000 Draws from Standard Normal Distribution")
+lines(x, f(x), lty = 2)
+legend('topright',legend=c('Actual Normal Distribution'),lty=2)
+
+```
+
+Part 3
+
+Question 13
+```{r}
+x<-5
+n<-1
+x.vals<-c()
+set.seed(0)
+while (x>=0) {
+  x.vals[n]<-x
+  r<-runif(1, min=-2,max=1)
+  x<-x+r
+  n<-n+1
+}
+print(x.vals)
+```
+
+Question 14
+```{r}
+plot(c(1:length(x.vals)),x.vals, type='o', xlab = 'Iteration', ylab='x', main='Random Walk')
+```
+
+Question 15
+```{r}
+random.walk<-function(x.start=5, plot.walk=TRUE){
+  n<-1
+  x.vals<-c()
+  x<-x.start
+  while (x>=0) {
+    x.vals[n]<-x
+    r<-runif(1, min=-2,max=1)
+    x<-x+r
+    n<-n+1
+  }
+  num.steps=length(x.vals)-1
+  if (plot.walk==TRUE){plot(c(1:length(x.vals)),x.vals, type='o', xlab = 'Iteration', ylab='x', main='Random Walk')}
+  output<-list(x.vals, num.steps)
+  names(output)<-c('X Values', 'Number of Steps')
+  return(output)
+}
+random.walk()
+random.walk()
+random.walk(x.start=10, plot.walk=FALSE)
+random.walk(x.start=10, plot.walk=FALSE)
+```
+
+Question 16
+```{r}
+steps<-c()
+for(i in 1:10000){
+  steps[i]<-random.walk(x.start=5, plot.walk=FALSE)$`Number of Steps`[[1]]
+}
+mean(steps)
+```
+
+Question 17
+```{r}
+random.walk<-function(x.start=5, plot.walk=TRUE, seed=NULL){
+  n<-1
+  x.vals<-c()
+  x<-x.start
+  while (x>=0) {
+    set.seed(seed)
+    x.vals[n]<-x
+    r<-runif(1, min=-2,max=1)
+    x<-x+r
+    n<-n+1
+  }
+  num.steps=length(x.vals)-1
+  if (plot.walk==TRUE){plot(c(1:length(x.vals)),x.vals, type='o', xlab = 'Iteration', ylab='x', main='Random Walk')}
+  output<-list(x.vals, num.steps)
+  names(output)<-c('X Values', 'Number of Steps')
+  return(output)
+}
+random.walk()
+random.walk()
+random.walk(plot.walk=FALSE, seed = 33)
+random.walk(plot.walk=FALSE, seed = 33)
+```
+
+
+Part Four
+
+Question 18
+```{r}
+g <- function(x) {
+  return(exp(-x^3))
+}
+x <- seq(0,1,.01)
+alpha <- 2
+beta <- 2
+plot(x,g(x),type="l",xlab="x",ylab="",ylim=c(-.1,1.4))
+polygon(c(0,seq(0,1,0.01),1),c(0,g(seq(0,1,0.01)),0) ,col="pink")
+lines(x,rep(1,length(x)),col="red")
+lines(x,dbeta(x,shape1=alpha,shape2=beta),col="blue")
+legend("topleft",legend=c("g(x)","uniform","beta(2,2)"),
+       lty=c(1,1,1),col=c("black","red","blue"),cex=.6)
+```
+
+Question 19
+```{r}
+# g(x)=exp(-x^3)
+# p(x)=1
+
+g.over.p <- function(x) {
+  return(exp(-x^3))
+}
+mean(g.over.p(runif(1000*1000)))
+```
+
+Question 20
+```{r}
+# g(x)=exp(-x^3)
+# p(x)=(x)(x-1)/B(2,2), where B(2,2)=Gamma(2)*Gamma(2)/Gamma(4)
+g.over.p <- function(x) {
+  return(exp(-x^3)*((gamma(2)*gamma(2))/gamma(4))/(x*(1-x)))
+}
+mean(g.over.p(rbeta(1000*1000,2,2)))
+```
