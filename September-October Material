@@ -1,0 +1,268 @@
+#Ultimate Midterm Cheat Sheet 
+#rnorm() function
+##parameters: rnorm(n, mean=, sd=) (n=no. of variables to generate)
+
+#rm() function
+##removes a variable 
+
+#rm(list=ls())
+##removes everything from the environment 
+
+#typeof() function
+##returns the type of something 
+
+#rep(x,n times)
+##repeats x, n times 
+
+#c() function
+##concatenation function, builds vectors 
+
+#matrix(stuff, nrow=, ncol=)
+##builds a matrix with the specified parameters
+##fills out by columns unless specified 
+
+#rbind() and cbind()
+##binds vectors to create a matrix, row-wise or column-wise 
+
+#Subsetting Vectors 
+y <- c(27, -34, 19, 7, 61) #declare y 
+y[2] #get 2nd element, -34 
+y[3:5] #get elements 3-5 
+y[c(1, 4)] #get elements 1 & 4 
+y <- c(27, -34, 19, 7, 61)
+y[c(1, 4)] <- 0 #reassign elements 1&4 to be 0 
+y <- c(27, -34, 19, 7, 61)
+y[-c(1, 4)] #get all except elements 1 & 4 
+y <- y[-1] #delete the first element 
+
+#Subsetting Matrices 
+mat <- matrix(1:8, ncol = 4)
+mat[, 2:3] #gets 2nd & 3rd columns 
+names<-c("Column1","Column2","Column3","Column4") #Gives names to columns
+colnames(mat)<-names
+mat[, "Column2"] #Gets the second column
+mat[, -1] #gets all but the first column 
+
+#locator()
+##lets you pick any location on a plot 
+
+#Logical Operators 
+1 > 3 #False 
+1 == 3 #False 
+1 != 3 #True
+(1 > 3) & (4*5 == 20) #False
+(1 > 3) | (4*5 == 20) #True | means or 
+c(0,1,4) < 3 #(False, False, True)
+which(c(0,1,4) < 3) #gets indices where it's true 
+which(c(TRUE, TRUE, FALSE)) #gets indices where it's true- here it's silly
+
+#Extraction with Logical Operators 
+w <- c(-3, 20, 9, 2)
+w[w > 3] #Extract elements of w greater than 3
+w[w*w >= 3 & w*w <= 10] # Extract elements of w with squares between 3 and 10
+w*w >= 3 #True or False if the squared elements of w are greater than 3 (they all are)
+w*w <= 10 #True or False if the squared elements of w are less than 10 
+w*w >= 3 & w*w <= 10 #both conditions above met 
+##this can be done with matrices as well 
+
+#Reassignment with Logical Operators 
+M <- matrix(c(rep(4,5), 5:8), ncol=3, nrow=3)
+M[M > 5] <- 0 #Assign elements greater than 5 with zero 
+z <- matrix(c(1:3, TRUE, FALSE, TRUE, 9, 16, 25), nrow = 3) #bonkers matrix
+colnames(z) <- c("First", "Second", "Third") 
+z[z[, "Second"], ] #gets first row twice 
+z[, 1] != 1 #evaluates whether elements of the first column are not equal to one 
+z[(z[, 1] != 1), 3] #second and third rows of the third column 
+z[(z[, 1] != 1), 3, drop = FALSE] #keeps matrix format 
+
+#NA and Null Values
+##NA means missing value
+##Null doesn't exist 
+t <- c(-1,0,NA,5)
+mean(t) #R can't calculate a mean with NA values 
+mean(t, na.rm = TRUE) #removes NA values 
+s <- c(-1, 0, NULL, 5)
+mean(s) #null values are just fine for calculations 
+
+#Extraction with Single or Double Brackets 
+##See Notes 
+
+#factor() function
+##Tells R to treat data as categorical 
+
+#split() function
+##helps us divide up categorical data 
+
+#Importing Data
+##setwd("~/Desktop/Data")
+##getwd()
+
+#Control Statements 
+#For
+x <- c(5, 12, -3)
+for (i in x) {print(i^2)}
+##You can iterate over anything 
+#While
+i <- 1
+while (i <= 10) i <- i + 4
+#If 
+for (i in seq(4)) {
+  if (i %% 2 == 0) {print(log(i))}
+  else {print("Odd")}
+}
+
+#Vectorized Operations
+##ifelse() function, godsent
+###ifelse(test,yes,no) #operates over vectors 
+
+#The apply() commands 
+##apply a loop over something with some function: apply(type, margin, function)
+mat <- matrix(1:12, ncol = 6)
+apply(mat, 1, sum) #1 for row, 2 for column, calculates row sums
+##lapply() returns a list, makes selecting easy 
+vec1 <- c(1.1,3.4,2.4,3.5)
+vec2 <- c(1.1,3.4,2.4,10.8)
+not_robust <- list(vec1, vec2)  
+lapply(not_robust, mean) #gets mean of both lists, in a list form 
+lapply(not_robust, median)
+sapply(not_robust, median) #sapply() gives a vector instead of a list
+##tapply() used for factor variables: tapply(vector, factor, function)
+
+#proc.time() function
+##gets times in a dataframe 
+
+#Graphics with the Diamonds Data Set 
+setwd("~/Desktop/Data")
+diamonds<- read.csv("diamonds.csv", as.is = T)
+#using as.is=T means that we need to tell R what to treat as a factor variable
+diamonds$cut<- factor(diamonds$cut)
+diamonds$color<- factor(diamonds$color)
+diamonds$clarity <- factor(diamonds$clarity)
+#Reordering Names 
+diamonds$cut <- factor(diamonds$cut, level = c("Fair","Good", "Very Good", "Premium", "Ideal"))
+#Bargraphs and Boxplots - Variation in a Single Variable
+#Bargraphs: barplot() function, specify heights and names of the bars, nice to do in a table
+table(diamonds$cut) 
+names(table(diamonds$cut))
+barplot(height = table(diamonds$cut),  names.arg = names(table(diamonds$cut)))
+#Histograms: Good for Continuous RV's 
+hist(diamonds$carat, main = "Histogram of Carats", xlab = "Carats")
+##don't be afraid to experiment with subsections of data, or the number of breaks
+##breaks=n, divides into n bins 
+##breaks=seq(start, finish, by=n), divides start and finish into bars size n 
+##breaks=c(....), divides based on whatever sizes are specified in the vector 
+#Boxplots and Scatterplots - Covariation between Variables 
+#Boxplots 
+boxplot(price ~ cut, data = diamonds, ylab = "Price", xlab = "Cut")
+#Scatterplots 
+##very basic 
+plot(diamonds$carat, diamonds$price, xlab = "Carats", ylab = "Price ($)")
+## plots with color
+plot(log(small_diam$carat), log(small_diam$price), col = small_diam$cut)
+## plots with color and legend
+legend("bottomright", legend = levels(small_diam$cut),fill = 1:length(levels(small_diam$cut)), cex = .5)
+##adding lines 
+###lines function
+lines(x.vec,.5*cos(x.vec)+1,col='green')
+###abline function 
+lm1 <- lm(log(small_diam$price) ~ log(small_diam$carat))
+abline(lm1)
+###can use a linear model or specify a slope and intercept 
+###multiple lines
+cuts        <- levels(small_diam$cut)
+col_counter <- 1
+
+for (i in cuts) {
+  this_cut    <- small_diam$cut == i
+  this_data   <- small_diam[this_cut, ]
+  this_lm     <- lm(log(this_data$price) 
+                    ~ log(this_data$carat))
+  abline(this_lm, col = col_counter)
+  col_counter <- col_counter + 1
+}
+##adding points 
+points(-0.4, 6.8,  pch = "*", col = "purple") # just specify location, symbol, color 
+##with a caption 
+text(-0.4, 6.8 - .2, "New Diamond", cex = .5)
+
+#Linear Regression Basics 
+##lm0 <- lm(Y ~ X1 + X2 + X3, data = Grocery) specify model
+##residuals(lm0)[1:5] first 5 residuals 
+##fitted(lm0)[1:5] first 5 fitted values 
+##summary(lm0) detailed model
+
+#Bootstrap 
+#See Lab 2 
+
+#Graphics, Continued 
+##Default Graphical Parameters: mfrow=c(1,1)
+##Changing Graphical Parameters:  par(mfrow=c(1,2)) #1 row, 2 columns for graphs, effectively 2 slots
+##Default Margins: mar=c(5.1, 4.1, 4.1, 2.1))
+##Changing Margins: par(mfrow=c(1,2),mai=c(.5,.4,.5,.4)) #less spacing, can zoom in 
+
+#ggplot2
+##IMPORTANT: library('ggplot2')
+##Syntax: every component of a graph is a separate argument, axes, points, lines, etc. 
+##Creating Axes
+mpg<-mpg
+ggplot(data=mpg) 
+## Adding Points: geom_point
+##other functions add other components 
+ggplot(data=mpg) + geom_point(mapping = aes(x = displ, y = hwy))
+##can include a color function to color lines/points differently 
+ggplot(data = mpg) + geom_point(mapping = aes(x=displ, y=hwy, color=class))
+##add subplots with categorical data using a facet wrap 
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy)) + facet_wrap(~ class, nrow = 2)
+##plots over classes of vehicles
+##facet grid lets us use two categorical variables 
+ggplot(data = mpg) + geom_point(mapping = aes(x = displ, y = hwy)) + facet_grid(drv ~ class)
+##Adding Lines: geom_smooth
+ggplot(data = mpg) + geom_smooth(mapping = aes(x = displ, y = hwy)) #connects points with a smoother
+ggplot(data = mpg) + geom_smooth(mapping = aes(x = displ, y = hwy),method = "lm") #uses OLS to regress
+##Putting It All Together 
+ggplot(data = mpg) + 
+  geom_point(mapping = aes(x = displ, y = hwy)) +
+  geom_smooth(mapping = aes(x = displ, y = hwy)) +
+  geom_point(mapping = aes(x=3, y=30), color = "purple") +
+  geom_text(mapping = aes(x=3, y=31, label = "New Point"), size=4) +
+  labs(title = "New Plot", x = "Engine Weight", y = "Highway mpg")
+##We added: axes, a set of points, a smoother, a new point, a label, titles 
+##Other Plots: geom_bar 
+ggplot(diamonds)+geom_bar(aes(x=cut)) #only requires one specification: bar height 
+upper <- diamonds$price > quantile(diamonds$price,probs = .75) 
+diamonds$Expensive <- ifelse(upper,"high","not-high")
+ggplot(data=diamonds) +
+  geom_bar(aes(x=cut,fill=factor(Expensive))) #fill: splits bars 
+
+#Character Strings 
+##nchar(''), like length but specifically for character strings
+##cat(), special function for printing strings, lets you use special characters 
+##Substrings 
+##substr(string, start= ,stop= )
+##can also use this to reassign 
+##start and stop can be functions, esp. nchar()
+##strsplit(something, split='') splits strings along some parameter, get a list
+##paste() combines into one string 
+###collapse argument will put something in between (e.g. a semi colon)
+
+#Searching Strings 
+##grep("string", type) finds all instances of a string, case and punctuation sensitive
+##grepl("string", type), returns a logical. When we have lines it tells us whether or not a string appears
+##grep() can be used to subset 
+##Basic Rules 
+##[a-z] -> lowercase letters
+##[:punct:] -> punctuation
+##[^...] -> negates anything that comes after
+##[c.s] -> matches cats, candles, etc. 
+##Quantifiers 
+#+ one or more times
+#* zero or more times 
+#? Repeated zero or one times.
+#{n} Repeated exactly n times.
+#{n, } Repeated n or more times.
+#{n, m} Repeated between n and m times
+#grepl()--> returns a logical
+#regexpr()--> first match
+#gregexpr()--> like reg expr but global 
+#regmatches()--> returns actual matching strings 
+
