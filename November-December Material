@@ -1,0 +1,495 @@
+---
+title: "Ultimate Final Study Guide"
+author: "Andrew Gruber - arg2223"
+date: "12/10/2019"
+output: html_document
+---
+Setting the Directory
+```{r}
+setwd("~/Desktop/Data")
+```
+
+Classification
+```{r}
+library(ISLR)
+#Basic KNN Function
+KNN.decision <- function(Lag1.new, Lag2.new, K = 5, 
+                         Lag1 = Smarket$Lag1, 
+                         Lag2 = Smarket$Lag2,
+                         Dir = Smarket$Direction) {
+  
+  n <- length(Lag1)
+  #stopifnot not required 
+  stopifnot(length(Lag2) == n, length(Lag1.new) == 1, 
+            length(Lag2.new) == 1, K <= n)
+  
+  dists <- sqrt((Lag1-Lag1.new)^2 + (Lag2-Lag2.new)^2) #obtain all distance
+  
+  neighbors  <- order(dists)[1:K] #get the K that we care about
+  neighb.dir <- Dir[neighbors]
+  choice     <- names(which.max(table(neighb.dir))) #make the decision 
+  return(choice)
+}
+
+#Testing and Training
+#Step 1: Break Up Data into Train and Test
+test  <- Smarket[Smarket$Year == 2005, ] 
+train <- Smarket[Smarket$Year != 2005, ]
+#Step 2: Set Up Storage of Results 
+n.test <- nrow(test)
+predictions <- rep(NA, n.test)
+#Step 3: Iterate over Test Data with classification applied to training data
+for (i in 1:n.test){predictions[i] <- KNN.decision(test$Lag1[i], test$Lag2[i], Lag1 = train$Lag1, Lag2 = train$Lag2, Dir = train$Direction)}
+#Step 4: Get MSE
+test.error <- sum(predictions != test$Direction)/n.test
+
+#Cross Validation Algorithm
+#each time, different training and testing data are used with k folds (i.e. k-fold cross validation)
+#Basically just adds another for loop with the number of folds (See Lab 4)
+
+```
+
+
+
+
+Split, Apply, Combine 
+
+Splitting
+```{r}
+setwd("~/Desktop/Data")
+strikes <- read.csv("strikes.csv", as.is = TRUE)
+
+#Our Usual Way
+italy.strikes <- strikes[strikes$country == "Italy", ]
+
+#Subset Function
+italy.strikes <- subset(strikes, country == "Italy")
+
+#Split Function --> split(data, groups)
+strikes.split <- split(strikes, strikes$country) #this creates a dataframe for each country
+```
+
+Applying & Combining
+```{r}
+#Use one of the apply functions: e.g. apply(split dataset, function)
+#To combine, just save it as something: years.mat   <- sapply(years.split, three.mean)
+#apply(): apply a function to rows or columns of a matrix or dataframe
+#lapply(): apply a function to elements of a list or vector
+#sapply(): same as the above, but simplify the output (if possible)
+#tapply(): apply a function to levels of a factor vector
+
+#More advanced 'apply' functions: plyr()
+library(plyr)
+#**ply --> first two letters tell us what we input and what we output
+#First letter: a, d, l (array, dataframe, list)
+#Second letter: a, d, l, + _ (drop the data structure)
+#Basic Structure: a*ply(data structure, margin (typically row or column), function)
+#Basic Structure: d*ply(data structure, variables to split on, function)
+#can reference more than one variable: .(variable1, variable2, ...)
+#Basic Structure: l*ply(data structure, function)
+```
+
+Simulation
+
+Random Number Generation
+```{r}
+#R's Functions 
+#dnorm -> PDF/PMF #use this for plotting
+#pnorm -> CDF 
+#qnorm -> Inverse CDF
+#rnorm -> random draws (this is for random number generation)
+
+#Graphing Random Variables
+t  <- seq(-10, 10, by = .01)
+df <- c(1, 2, 5, 30, 100)
+
+plot(t, dnorm(t), lty = 1, col = "red", ylab = "f(t)", 
+     main = "Student's t")
+
+for (i in 1:5) {
+  lines(t, dt(t, df = df[i]), lty = i) 
+}
+
+
+legend <- c(paste("df=", df, sep = ""), "N(0,1)")
+
+legend("topright", legend = legend, lty = c(1:5, 1), 
+       col = c(rep(1, 5), 2))
+
+```
+
+Discrete Random Sampling
+```{r}
+#Rolling a Die
+n     <- 100
+rolls <- sample(1:6, n, replace = TRUE)
+table(rolls)
+
+rolls <- floor(runif(n, min = 0, max = 6))
+table(rolls)
+```
+
+Inverse Transform Method
+```{r}
+#Simulate an Exponential RV
+lambda <- 2
+n      <- 1000
+u      <- runif(n) # Simulating uniform rvs
+#Step One: Define Inverse of Function CDF
+#Step Two: Write a function to simulate from it (similar to a dfoo())
+Finverse <- function(u, lambda) {
+  # Function for the inverse transform
+  return(ifelse((u<0|u>1), 0, -(1/lambda)*log(1-u)))
+}
+#Step Three: Perform the Simulation and Plot 
+x <- Finverse(u, lambda)
+hist(x, prob = TRUE, breaks = 15)
+y <- seq(0, 10, .01)
+lines(y, lambda*exp(-lambda*y), col = "blue")
+```
+
+Acceptance-Rejection Algorithm
+```{r}
+#Simulating a Normal Distribution
+#Step 1: Generate Draws from a Target Distribution
+f<-function(x){
+  return((1/sqrt(2*pi))*exp(-0.5*x*x))
+}
+x<-seq(-5,5, by=0.01)
+plot(x,f(x),type='l', main='PDF for a Normal(1,0)')
+#Step Two: Determine e(x)
+#Relatively Simple Method: get function maximum and set it as the envelope, i.e. f(xmax)
+#More complex: determine a function g(x) and scale is by alpha s.t. e(x)=g(x)/alpha
+#This is g(x)
+cauchy.sim <- function(n) {
+  u<-runif(n)
+  return(ifelse((u < 0 | u > 1), 0, tan(pi*(u-1/2))))
+}
+
+e<-function(x,alpha){
+  envelope<-((1/alpha)*(1/pi)*(1/(1+x^2)))
+  return(envelope)
+}
+#Here, g(x) is a modified cauchy and we can experiment with alpha 
+x<-seq(-10,10, by=0.01)
+plot(x,f(x), type='l', lty=1)
+lines(x, e(x,alpha=0.62), type='l', lty=2)
+legend('topright', legend=c('Function','Envelope'),lty=1:2)
+#We want e(x) to be as close to the function as possible but never less
+#Step Three: Simulate
+normal.sim<-function(draws){
+  n<-0 #initialize counter
+  f.draws=numeric(draws) #we want 'draws' number of samples
+  while(n<draws){
+  y<-cauchy.sim(1) #this is the random draw from g(x), if you are using the max.                           method then this is runif(1)
+  u<-runif(1) #THIS IS ALWAYS ALWAYS ALWAYS runif(1)
+  if(u<f(y)/e(y,0.62)){
+    n<-n+1
+    f.draws[n]<-y
+    #if true, update counter and accept
+  }
+  }
+  return(f.draws)
+}
+set.seed(0)
+normal.sim(10)
+#Step Four: Visualize
+set.seed(0)
+normal.draws<-normal.sim(10000)
+hist(normal.draws, prob = T, ylab = "f(x)", xlab = "x", ylim=c(0,0.5),
+     main = "Histogram of 10000 Draws from Standard Normal Distribution")
+lines(x, f(x), lty = 2)
+legend('topright',legend=c('Actual Normal Distribution'),lty=2)
+```
+
+Monte Carlo Integration
+```{r}
+#Step One: Obtain g(x)/p(x)
+#g(x) is the target function, e.g. g(x)=exp(-x^3)
+#p(x) is the PDF of the distriubtion being used, e.g. p(x)=1 is a uniform[0,1]
+#then g(x)/p(x)=exp(-x^3), simple for this one
+#Step Two: Simulate from g(x)/p(x)
+g.over.p <- function(x) {
+  return(exp(-x^3))
+}
+#Step Three: Get the Mean (i.e integral answer)
+mean(g.over.p(runif(1000*1000)))
+```
+
+Distributions as Models
+
+Distributions of Data
+```{r}
+library(MASS)
+#Empirical CDF's
+plot(ecdf(cats$Hwt), main = "Empirical CDF of Cat Heart Weights")
+#Estimating the Distribution
+hist(cats$Hwt, probability = TRUE, ylim = c(0, 0.17))
+lines(density(cats$Hwt), lty = 2) #overlays the estimated PDF (not the empirical one)
+```
+
+Method of Moments 
+```{r}
+#Match up parameters to those in the data
+#Getting the Estimates
+gamma.MMest <- function(data) {
+  m <- mean(data)
+  v <- var(data)
+  return(c(a = m^2/v, s = v/m))
+}
+gamma.MMest(cats$Hwt)
+hist(cats$Hwt, probability = TRUE, ylim = c(0, 0.17))
+lines(density(cats$Hwt), lty = 2) 
+x<-seq(0,30, by=0.1)
+cat.MM <- gamma.MMest(cats$Hwt)
+curve(dgamma(x, shape = cat.MM["a"], scale = cat.MM["s"]),add = TRUE, col = "blue")
+#Numerical Method
+gamma.mean <- function(a, s) {return(a*s)}
+gamma.var <- function(a, s) {return(a*s^2)}
+gamma.diff <- function(params, data) {
+  a <- params[1]
+  s <- params[2]
+return((mean(data) - gamma.mean(a,s))^2 + (var(data) - gamma.var(a,s))^2)}
+nlm(gamma.diff, c(19, 1), data = cats$Hwt)[1:3]
+#Evaluating Method of Moments
+g<-rgamma(100, shape=19, scale=45)
+gamma.MMest(g)
+```
+
+Maximum Likelihood Estimation 
+```{r}
+#Likelihood Function
+gamma.ll<-function(params,data){
+  a<-params[1]
+  s<-params[2]
+  return(sum(dgamma(data, shape = a, scale = s, log = TRUE)))
+}
+gamma.ll(c(19,0.05), cats$Hwt)
+#Negative Likelihood Function (this is what we use for the procedure)
+neg.gamma.ll<-function(params,data){
+  a<-params[1]
+  s<-params[2]
+  return(-sum(dgamma(data, shape = a, scale = s, log = TRUE)))
+}
+nlm(neg.gamma.ll, c(19,1), cats$Hwt)
+#Evaluating the MLE
+#Compare quantiles, QQ-Plot
+#Calibration Plot
+#Kolmogorov-Smirnov: ks.test(cats$Hwt, pgamma, shape = a, scale = s)
+#Kolmogorov-Smirnov with Cross Validation
+n      <- length(cats$Hwt)
+train  <- sample(1:n, size = round(.9*n))
+cat.MM <- gamma.MMest(cats$Hwt[train])
+a <- cat.MM["a"]
+s <- cat.MM["s"]
+ks.test(cats$Hwt[-train], pgamma, shape = a, scale = s)
+
+```
+
+Bayesian Estimation: MCMC
+```{r}
+X <- rbinom(50, size = 1, prob = 0.25)
+#Binomial Likelihood, Beta Conjugate Prior
+#Step One: Make an Initial Guess from Proposal Distribution and set up loop
+theta_1 <- rbeta(1,shape1=1,shape2=1) # Draw theta_(0)  
+n.samps <- 10000 # Number of iterations
+theta_vec <- rep(NA,(n.samps+1))
+theta_vec[1] <- theta_1
+#Step Two: MCMC Loop
+for (t in 1:n.samps) {
+# Step 2A: Draw theta* from from proposal
+theta_star <- rbeta(1,1,1) 
+theta_t <- theta_vec[t] # store that guess in our vector
+#Step 2B: Compute MH ratio
+MH_ratio <- prod(dbinom(X,size=1,prob=theta_star))/prod(dbinom(X,size=1,prob=theta_t))
+# Step 2C: Select new case 
+prob_vec <- c(min(MH_ratio,1),1-min(MH_ratio,1))
+theta_vec[t+1] <- sample(c(theta_star,theta_t),1,prob = prob_vec) }
+#Step 3: Evaluation
+plot(theta_vec,type="l")
+hist(theta_vec,breaks=30)
+```
+
+Optimization
+
+Gradient Descent
+```{r}
+library(numDeriv)
+grad.descent <- function(f, x0, max.iter = 200, step.size = 0.05, stopping.deriv = 0.01, ...) {
+  #Step 1: Define Parameters - how much do we move per step, when can we stop?
+  n    <- length(x0)
+  xmat <- matrix(0, nrow = n, ncol = max.iter)
+  xmat[,1] <- x0
+  #Step 2: Iterate!
+  for (k in 2:max.iter) {
+    # Step 2A: Calculate the gradient at each step
+    grad.cur <- grad(f, xmat[ ,k-1], ...) 
+    
+    # Step 2B: Should we stop?
+    if (all(abs(grad.cur) < stopping.deriv)) {
+      k <- k-1; break
+    }
+    
+    # Step 2C: Move in the opposite direction of the grad
+    xmat[ ,k] <- xmat[ ,k-1] - step.size * grad.cur
+  }
+  
+  xmat <- xmat[ ,1:k] # Trim
+  return(list(x = xmat[,k], xmat = xmat, k = k))
+}
+simpleFun = function(x) { 
+  # x is a vector of length 2
+  return(x[1]^2 + 1/3*x[2]^2)
+}
+x0 <- c(-1.9, -1.9)
+grad.descent(simpleFun, x0, max.iter=1000, step.size = 0.01)
+```
+
+Gradient Descent with Linear Regression
+```{r}
+n <- 100
+p <- 2
+pred <- matrix(rnorm(n*p), n, p)
+beta <- c(1, 4)
+#With Linear Regression
+resp <- pred %*% beta + rnorm(n)
+coef(lm(resp ~ pred + 0))
+#With Gradient Descent
+MSE <- function(beta) { 
+  return(sum((resp - pred %*% beta)^2))
+}
+grad.descent(MSE, x0 = c(0,0), step.size = 0.001,max.iter = 200)
+```
+
+Newton's Method
+```{r}
+library(numDeriv)
+
+Newton.method <- function(f, x0, max.iter = 200, stopping.deriv = 0.001, ...) {
+  #Step 1: Define Parameters - how much do we move per step, when can we stop?
+  n    <- length(x0)
+  xmat <- matrix(0, nrow = n, ncol = max.iter)
+  xmat[,1] <- x0
+  #Step 2: Iterate!
+  for (k in 2:max.iter) {
+    #Step 2A: Calculate the gradient
+    grad.cur <- grad(f, xmat[ ,k-1], ...) 
+    
+    #Step 2B: Calculate the Hessian (this is new!!)
+    inv.hess<-solve(hessian(f, xmat[ ,k-1], ...))
+    
+    #Step 2C: Should we stop?
+    if (all(abs(grad.cur) < stopping.deriv)) {
+      k <- k-1; break
+    }
+    
+    # Step 2D: Move in the opposite direction of the grad
+    xmat[ ,k] <- xmat[ ,k-1] - inv.hess %*% grad.cur
+  }
+  
+  xmat <- xmat[ ,1:k] # Trim
+  return(list(x = xmat[,k], xmat = xmat, k = k, minimum=f(xmat[,k],...)))
+}
+
+```
+
+
+Regression Topics 
+
+Logistic Regression
+```{r}
+setwd("~/Desktop/Data")
+cancer <- read.table("logistic.txt")
+#With Likelihood Estimation
+#Step 1: Set Up Likelihood Function
+logistic.NLL <- function(beta,data=cancer) {
+  
+  beta_0 <- beta[1]
+  beta_1 <- beta[2]
+  y <- data$y
+  x <- data$x
+  linear.component <- beta_0 + beta_1*x
+  p.i <- exp(linear.component)/(1+exp(linear.component))
+  return(-sum(dbinom(y,size=1,prob=p.i,log=TRUE)))
+}
+
+logistic.NLL(beta=c(-1,.5),data=cancer)
+#Step 2: Use an Optimization Procedure to Find Parameters (nlm, gradient descent, etc)
+nlm(logistic.NLL,p=c(-1,.5),data=cancer)
+#With Built in Functions
+model <- glm(y~x,data=cancer,family=binomial(link="logit"))
+model
+#Prediction
+x.test <- data.frame(x=7)
+linear.pred <- predict(model,newdata = x.test)
+linear.pred
+exp(linear.pred)/(1+exp(linear.pred))
+```
+
+Iteratively Reweighted Least Squares (IRLS)
+```{r}
+#Basically, Newton's Method for Linear Regression
+
+n <- nrow(cancer)
+X <- cbind(rep(1,n),cancer$x)
+y <- cancer$y
+
+#Step One: Set the Number of Iterations (a la max.iter from optimization)
+R <- 10
+#Step Two: Initialize the Guess
+theta <- matrix(0,nrow=2,ncol=R+1)
+beta0 <- log(mean(y)/(1-mean(y))) #Guess for b0
+theta[,1] <- c(beta0,0)
+#Step 3: Iterate!
+for (i in 1:R) {
+  #Step 3A: Start at the Guess or Iteration i
+  theta.i <- theta[,i]
+  #Step 3B: Set Up the Regression
+  linear.term.i <- theta.i[1]*X[,1]+theta.i[2]*X[,2]
+  p.i <- exp(linear.term.i)/(1+exp(linear.term.i))
+  W.i <- diag(p.i*(1-p.i))
+  #Step 3C: Perform Newton's Descent
+  theta[,i+1] <- theta[,i] + solve(t(X)%*%W.i%*%X)%*%(t(X)%*%(y-p.i))
+}
+theta #tends to converge quickly
+```
+
+Robust Estimation: Huber Loss
+```{r}
+#Step 1: Define Loss Function
+psi = function(r, c=1) {
+return(ifelse(r^2 > c^2, 2*c*abs(r)-c^2, r^2))}
+
+#Step 2: Set Up the Objective Function (i.e. the loss function with parameters we care about)
+huber.loss <- function(beta) {
+sum(psi(y - x %*% beta))}
+
+#Step 3: Minimize the Huber Loss Function (we used gradient descent in the homework)
+library(numDeriv)
+grad.descent <- function(f, x0,max.iter= 200, step.size = 0.05,
+stopping.deriv = 0.01, ...) {
+n <- length(x0)
+xmat <- matrix(0, nrow = n, ncol = max.iter)
+xmat[,1] <- x0
+
+for (k in 2:max.iter) {
+# Calculate the gradient
+grad.cur <- grad(f, xmat[ ,k-1], ...)
+
+# Should we stop?
+if (all(abs(grad.cur) < stopping.deriv)) {k <- k-1; break}
+
+# Move in the opposite direction of the grad
+xmat[ ,k] <- xmat[ ,k-1] - step.size * grad.cur
+}
+
+xmat <- xmat[ ,1:k] # Trim
+return(list(x = xmat[,k], xmat = xmat, k = k))
+}
+
+gd <- grad.descent(huber.loss, x0 = rep(0,p), max.iter=200, step.size=0.001, stopping.deriv=0.1)
+
+gd$x
+gd$k
+```
+
